@@ -1,0 +1,683 @@
+import React, { useState, useEffect, useCallback } from "react";
+
+/* ----------------------------- Doodle icons ----------------------------- */
+
+const Dumbbell = ({ className = "" }) => (
+  <svg viewBox="0 0 64 64" className={className} fill="none">
+    <rect x="6" y="24" width="10" height="16" rx="3" stroke="currentColor" strokeWidth="3" />
+    <rect x="48" y="24" width="10" height="16" rx="3" stroke="currentColor" strokeWidth="3" />
+    <path d="M16 31 H48" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+    <path d="M22 22 V42 M42 22 V42" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+  </svg>
+);
+
+const Band = ({ className = "" }) => (
+  <svg viewBox="0 0 64 64" className={className} fill="none">
+    <path
+      d="M14 12c-10 8-10 32 0 40 6 5 14 5 18-2 3-6-1-12-7-12s-9 6-6 11c4 7 12 7 18 2 10-8 10-32 0-40"
+      stroke="currentColor"
+      strokeWidth="3.5"
+      strokeLinecap="round"
+      fill="none"
+    />
+  </svg>
+);
+
+const Yoga = ({ className = "" }) => (
+  <svg viewBox="0 0 64 64" className={className} fill="none">
+    <circle cx="32" cy="12" r="5" stroke="currentColor" strokeWidth="3" />
+    <path
+      d="M32 17 V34 M32 34 C20 38 14 48 12 54 M32 34 C44 38 50 48 52 54 M22 26 C26 30 38 30 42 26"
+      stroke="currentColor"
+      strokeWidth="3"
+      strokeLinecap="round"
+      fill="none"
+    />
+  </svg>
+);
+
+const Walk = ({ className = "" }) => (
+  <svg viewBox="0 0 64 64" className={className} fill="none">
+    <path
+      d="M18 50c2-3 1-7-2-9s-3-7 1-9 8 1 8 6c0 3-2 4-2 7 0 4 4 5 6 2"
+      stroke="currentColor"
+      strokeWidth="3"
+      strokeLinecap="round"
+      fill="none"
+    />
+    <path
+      d="M38 30c2-3 1-7-2-9s-3-7 1-9 8 1 8 6c0 3-2 4-2 7 0 4 4 5 6 2"
+      stroke="currentColor"
+      strokeWidth="3"
+      strokeLinecap="round"
+      fill="none"
+    />
+  </svg>
+);
+
+const Sun = ({ className = "" }) => (
+  <svg viewBox="0 0 64 64" className={className} fill="none">
+    <circle cx="32" cy="32" r="10" stroke="currentColor" strokeWidth="3" />
+    {[0, 45, 90, 135, 180, 225, 270, 315].map((deg) => (
+      <line
+        key={deg}
+        x1={32 + 16 * Math.cos((deg * Math.PI) / 180)}
+        y1={32 + 16 * Math.sin((deg * Math.PI) / 180)}
+        x2={32 + 22 * Math.cos((deg * Math.PI) / 180)}
+        y2={32 + 22 * Math.sin((deg * Math.PI) / 180)}
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinecap="round"
+      />
+    ))}
+  </svg>
+);
+
+const Stamp = ({ className = "" }) => (
+  <svg viewBox="0 0 64 64" className={className} fill="none">
+    <path
+      d="M14 34 L26 46 L50 18"
+      stroke="currentColor"
+      strokeWidth="6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      fill="none"
+    />
+  </svg>
+);
+
+const Sparkle = ({ className = "" }) => (
+  <svg viewBox="0 0 64 64" className={className} fill="currentColor">
+    <path d="M32 8 L37 27 L56 32 L37 37 L32 56 L27 37 L8 32 L27 27 Z" />
+  </svg>
+);
+
+/* ------------------------- Exercise pictograms ------------------------- */
+
+const fig = {
+  stroke: "#3a3a3a",
+};
+
+function Head({ cx, cy }) {
+  return <circle cx={cx} cy={cy} r="6" stroke={fig.stroke} strokeWidth="3" fill="white" />;
+}
+function Limb({ d }) {
+  return <path d={d} stroke={fig.stroke} strokeWidth="3" strokeLinecap="round" fill="none" />;
+}
+function Arrow({ d, color }) {
+  return <path d={d} stroke={color} strokeWidth="3" strokeLinecap="round" strokeDasharray="2 4" fill="none" markerEnd="url(#arrowhead)" />;
+}
+function Weight({ x, y, color }) {
+  return <rect x={x - 5} y={y - 4} width="10" height="8" rx="2" fill={color} />;
+}
+function BandMark({ x1, y1, x2, y2, color }) {
+  return <path d={`M${x1} ${y1} Q${(x1+x2)/2} ${(y1+y2)/2 - 8} ${x2} ${y2}`} stroke={color} strokeWidth="2.5" fill="none" />;
+}
+
+const Diagram = ({ move, color }) => {
+  const arrowDefs = (
+    <defs>
+      <marker id="arrowhead" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+        <path d="M0,0 L6,3 L0,6 Z" fill={color} />
+      </marker>
+    </defs>
+  );
+
+  const wrap = (children) => (
+    <svg viewBox="0 0 100 100" className="w-full h-full">
+      {arrowDefs}
+      {children}
+    </svg>
+  );
+
+  switch (move) {
+    case "overheadPress":
+      return wrap(<>
+        <Head cx={50} cy={28} />
+        <Limb d="M50 34 V62" />
+        <Limb d="M50 38 L36 18 M50 38 L64 18" />
+        <Limb d="M50 62 L40 88 M50 62 L60 88" />
+        <Weight x={36} y={18} color={color} /><Weight x={64} y={18} color={color} />
+        <Arrow d="M50 18 V6" color={color} />
+      </>);
+    case "floorPress":
+      return wrap(<>
+        <Head cx={20} cy={55} />
+        <Limb d="M26 55 H78" />
+        <Limb d="M40 55 L40 35 M40 35 L40 35" />
+        <Limb d="M55 55 L55 35" />
+        <Weight x={40} y={32} color={color} /><Weight x={55} y={32} color={color} />
+        <Limb d="M78 55 L88 60 M78 55 L88 50" />
+        <Arrow d="M47 30 V18" color={color} />
+      </>);
+    case "bandRow":
+      return wrap(<>
+        <Head cx={70} cy={26} />
+        <Limb d="M70 32 V60 M70 60 L60 90 M70 60 L80 90" />
+        <Limb d="M70 38 L50 30" />
+        <Weight x={48} y={30} color={color} />
+        <BandMark x1={18} y1={30} x2={48} y2={30} color={color} />
+        <Limb d="M14 14 V46" />
+        <Arrow d="M40 30 L25 30" color={color} />
+      </>);
+    case "lateralRaise":
+      return wrap(<>
+        <Head cx={50} cy={26} />
+        <Limb d="M50 32 V60 M50 60 L40 88 M50 60 L60 88" />
+        <Limb d="M50 36 L24 30 M50 36 L76 30" />
+        <Weight x={22} y={30} color={color} /><Weight x={78} y={30} color={color} />
+        <Arrow d="M22 30 L22 18" color={color} />
+        <Arrow d="M78 30 L78 18" color={color} />
+      </>);
+    case "tricepExt":
+      return wrap(<>
+        <Head cx={50} cy={26} />
+        <Limb d="M50 32 V60 M50 60 L40 88 M50 60 L60 88" />
+        <Limb d="M50 36 L50 14 M50 14 L62 28" />
+        <Weight x={62} y={28} color={color} />
+        <Arrow d="M62 28 L62 44" color={color} />
+      </>);
+    case "bicepCurl":
+      return wrap(<>
+        <Head cx={50} cy={26} />
+        <Limb d="M50 32 V60 M50 60 L40 88 M50 60 L60 88" />
+        <Limb d="M52 38 L62 56 M62 56 L52 36" />
+        <Weight x={52} y={36} color={color} />
+        <Arrow d="M62 56 L62 40" color={color} />
+      </>);
+    case "gobletSquat":
+      return wrap(<>
+        <Head cx={50} cy={32} />
+        <Limb d="M50 38 V58" />
+        <Limb d="M50 42 L40 50 M50 42 L60 50" />
+        <Weight x={50} y={52} color={color} />
+        <Limb d="M50 58 L34 70 L34 90" />
+        <Limb d="M50 58 L66 70 L66 90" />
+        <Arrow d="M16 58 V40" color={color} />
+      </>);
+    case "lunge":
+      return wrap(<>
+        <Head cx={42} cy={26} />
+        <Limb d="M42 32 V52" />
+        <Limb d="M42 52 L26 64 L26 90" />
+        <Limb d="M42 52 L62 60 L74 90" />
+        <Limb d="M42 36 L32 46 M42 36 L52 46" />
+        <Weight x={30} y={46} color={color} /><Weight x={54} y={46} color={color} />
+        <Arrow d="M44 70 V84" color={color} />
+      </>);
+    case "hipThrust":
+      return wrap(<>
+        <Head cx={18} cy={70} />
+        <Limb d="M22 70 H56" />
+        <Limb d="M56 70 L70 50 L70 30" />
+        <Limb d="M56 70 L74 76 L86 76" />
+        <BandMark x1={62} y1={58} x2={78} y2={58} color={color} />
+        <Arrow d="M56 70 L56 56" color={color} />
+      </>);
+    case "calfRaise":
+      return wrap(<>
+        <Head cx={50} cy={26} />
+        <Limb d="M50 32 V62" />
+        <Limb d="M50 36 L36 50 M50 36 L64 50" />
+        <Limb d="M50 62 L42 82 L52 86" />
+        <Limb d="M50 62 L58 82 L66 86" />
+        <Arrow d="M47 70 V58" color={color} />
+      </>);
+    case "dumbbellRow":
+      return wrap(<>
+        <Head cx={20} cy={40} />
+        <Limb d="M24 42 L72 58" />
+        <Limb d="M72 58 L80 82 M72 58 L60 84" />
+        <Limb d="M50 50 L50 70" />
+        <Weight x={50} y={72} color={color} />
+        <Arrow d="M50 70 L50 50" color={color} />
+      </>);
+    case "facePull":
+      return wrap(<>
+        <Head cx={50} cy={30} />
+        <Limb d="M50 36 V62 M50 62 L40 88 M50 62 L60 88" />
+        <Limb d="M50 40 L30 26 M50 40 L70 26" />
+        <BandMark x1={14} y1={26} x2={30} y2={26} color={color} />
+        <BandMark x1={86} y1={26} x2={70} y2={26} color={color} />
+        <Limb d="M14 14 V40" /><Limb d="M86 14 V40" />
+        <Arrow d="M40 36 L48 32" color={color} />
+      </>);
+    case "arnoldPress":
+      return wrap(<>
+        <Head cx={50} cy={28} />
+        <Limb d="M50 34 V62" />
+        <Limb d="M50 38 L36 30 M50 38 L64 30" />
+        <Weight x={36} y={30} color={color} /><Weight x={64} y={30} color={color} />
+        <Limb d="M50 62 L40 88 M50 62 L60 88" />
+        <Arrow d="M36 24 a6 6 0 1 1 12 -4" color={color} />
+      </>);
+    case "reverseFly":
+      return wrap(<>
+        <Head cx={22} cy={40} />
+        <Limb d="M26 42 L70 56" />
+        <Limb d="M70 56 L80 80 M70 56 L60 82" />
+        <Limb d="M48 50 L34 36 M48 50 L62 64" />
+        <Weight x={32} y={34} color={color} /><Weight x={64} y={66} color={color} />
+        <Arrow d="M48 50 L40 38" color={color} />
+      </>);
+    case "tricepKickback":
+      return wrap(<>
+        <Head cx={22} cy={38} />
+        <Limb d="M26 40 L72 56" />
+        <Limb d="M72 56 L82 80 M72 56 L62 82" />
+        <Limb d="M48 50 L52 66 L70 70" />
+        <Weight x={70} y={70} color={color} />
+        <Arrow d="M58 68 L72 64" color={color} />
+      </>);
+    case "rdl":
+      return wrap(<>
+        <Head cx={24} cy={34} />
+        <Limb d="M28 36 L66 52" />
+        <Limb d="M66 52 L66 78 L56 92" />
+        <Limb d="M66 52 L78 78 L72 92" />
+        <Limb d="M44 42 L40 70" />
+        <Weight x={40} y={72} color={color} />
+        <Arrow d="M40 70 V52" color={color} />
+      </>);
+    case "gluteBridge":
+      return wrap(<>
+        <Head cx={16} cy={72} />
+        <Limb d="M20 72 H54" />
+        <Limb d="M54 72 L68 52 L68 32" />
+        <Limb d="M54 72 L72 78 L84 78" />
+        <BandMark x1={60} y1={60} x2={76} y2={60} color={color} />
+        <Arrow d="M54 72 L54 58" color={color} />
+      </>);
+    case "stepUp":
+      return wrap(<>
+        <Limb d="M62 92 H92 V76 H62 Z" />
+        <Head cx={48} cy={28} />
+        <Limb d="M48 34 V56" />
+        <Limb d="M48 38 L36 48 M48 38 L60 48" />
+        <Limb d="M48 56 L34 70 L30 92" />
+        <Limb d="M48 56 L66 70 L74 76" />
+        <Arrow d="M30 70 V50" color={color} />
+      </>);
+    case "lateralWalk":
+      return wrap(<>
+        <Head cx={36} cy={28} />
+        <Limb d="M36 34 V52" />
+        <Limb d="M36 38 L24 46 M36 38 L48 46" />
+        <Limb d="M36 52 L24 66 L24 90" />
+        <Limb d="M36 52 L52 66 L52 90" />
+        <BandMark x1={24} y1={80} x2={52} y2={80} color={color} />
+        <Arrow d="M58 60 L78 60" color={color} />
+      </>);
+    case "walk":
+      return wrap(<>
+        <Head cx={36} cy={26} />
+        <Limb d="M36 32 L40 58" />
+        <Limb d="M40 36 L26 46 M40 36 L58 30" />
+        <Limb d="M40 58 L26 74 L22 90" />
+        <Limb d="M40 58 L58 70 L66 60" />
+        <Arrow d="M70 50 L86 44" color={color} />
+      </>);
+    case "yoga":
+      return wrap(<>
+        <Head cx={50} cy={20} />
+        <Limb d="M50 26 V50" />
+        <Limb d="M50 30 L30 18 M50 30 L70 18" />
+        <Limb d="M50 50 L30 80 L26 92" />
+        <Limb d="M50 50 L70 80 L74 92" />
+        <Limb d="M34 60 L66 60" />
+      </>);
+    case "rest":
+      return wrap(<>
+        <circle cx="50" cy="50" r="16" stroke={color} strokeWidth="3" fill="none" />
+        {[0, 45, 90, 135, 180, 225, 270, 315].map((deg) => (
+          <line key={deg}
+            x1={50 + 22 * Math.cos(deg * Math.PI / 180)} y1={50 + 22 * Math.sin(deg * Math.PI / 180)}
+            x2={50 + 30 * Math.cos(deg * Math.PI / 180)} y2={50 + 30 * Math.sin(deg * Math.PI / 180)}
+            stroke={color} strokeWidth="3" strokeLinecap="round" />
+        ))}
+      </>);
+    default:
+      return wrap(<Head cx={50} cy={50} />);
+  }
+};
+
+/* ------------------------------- Data ------------------------------- */
+
+const PHASES = {
+  1: { name: "Base", sets: "3", reps: "12–15", rpe: "6–7", color: "#6B9080" },
+  2: { name: "Volumen", sets: "4", reps: "10–12", rpe: "7–8", color: "#FFB627" },
+  3: { name: "Intensidad", sets: "3–4", reps: "6–8", rpe: "8–9", color: "#FF6B5B" },
+  4: { name: "Descarga", sets: "2", reps: "12–15", rpe: "5", color: "#9B8AA6" },
+};
+
+const DAY_THEME = {
+  upper: { color: "#FF6B5B", bg: "#FFEDE9", icon: Dumbbell },
+  lower: { color: "#FFB627", bg: "#FFF6E2", icon: Dumbbell },
+  walk: { color: "#6B9080", bg: "#E9F2EC", icon: Walk },
+  yoga: { color: "#9B8AA6", bg: "#F1ECF4", icon: Yoga },
+  rest: { color: "#6FA8C9", bg: "#EAF4F8", icon: Sun },
+};
+
+const DAYS = [
+  {
+    id: "lunes", label: "Lunes", type: "Upper A", theme: "upper",
+    exercises: [
+      { id: "u1", name: "Press militar de pie", eq: "mancuerna", move: "overheadPress", cue: "Core activado, no arquear espalda." },
+      { id: "u2", name: "Press banca en suelo", eq: "mancuerna", move: "floorPress", cue: "Sustituto de banco, mismo estímulo de pecho." },
+      { id: "u3", name: "Remo con banda a una mano", eq: "banda", move: "bandRow", cue: "Codo pegado al cuerpo, anclada en la puerta." },
+      { id: "u4", name: "Elevaciones laterales", eq: "mancuerna", move: "lateralRaise", cue: "Controladas, sin impulso, peso bajo." },
+      { id: "u5", name: "Extensión de tríceps overhead", eq: "banda", move: "tricepExt", cue: "Codo fijo cerca de la cabeza." },
+      { id: "u6", name: "Curl de bíceps", eq: "mancuerna", move: "bicepCurl", cue: "Supinando la muñeca al subir." },
+    ],
+  },
+  {
+    id: "martes", label: "Martes", type: "Lower A", theme: "lower",
+    exercises: [
+      { id: "l1", name: "Sentadilla goblet", eq: "mancuerna", move: "gobletSquat", cue: "Mancuerna pegada al pecho, profundidad completa." },
+      { id: "l2", name: "Zancada", eq: "mancuerna", move: "lunge", cue: "Rodilla controlada, no choca con el suelo." },
+      { id: "l3", name: "Sentadilla búlgara", eq: "mancuerna", move: "lunge", cue: "Pie atrás apoyado en silla o superficie estable." },
+      { id: "l4", name: "Hip thrust con banda", eq: "banda", move: "hipThrust", cue: "Banda sobre rodillas, abre contra ella al subir." },
+      { id: "l5", name: "Elevación de talones", eq: "mancuerna", move: "calfRaise", cue: "En escalón si hay, mayor rango." },
+    ],
+  },
+  {
+    id: "miercoles", label: "Miércoles", type: "Caminata", theme: "walk",
+    exercises: [{ id: "w1", name: "Caminata 30 min", eq: "", move: "walk", cue: "Ritmo constante, sin pausas largas." }],
+  },
+  {
+    id: "jueves", label: "Jueves", type: "Upper B", theme: "upper",
+    exercises: [
+      { id: "u7", name: "Remo a una mano apoyado", eq: "mancuerna", move: "dumbbellRow", cue: "Espalda neutra, tirar con el codo." },
+      { id: "u8", name: "Face pull / pull-apart", eq: "banda", move: "facePull", cue: "Para salud de hombro, no te lo salgas." },
+      { id: "u9", name: "Press Arnold", eq: "mancuerna", move: "arnoldPress", cue: "Rotación de muñeca en el ascenso." },
+      { id: "u10", name: "Curl martillo", eq: "mancuerna", move: "bicepCurl", cue: "Agarre neutro, protege la muñeca." },
+      { id: "u11", name: "Pájaros (rear delt)", eq: "mancuerna", move: "reverseFly", cue: "Bisagra de cadera, peso muy bajo." },
+      { id: "u12", name: "Patada de tríceps con banda", eq: "banda", move: "tricepKickback", cue: "Codo fijo, solo se mueve el antebrazo." },
+    ],
+  },
+  {
+    id: "viernes", label: "Viernes", type: "Lower B", theme: "lower",
+    exercises: [
+      { id: "l6", name: "Peso muerto rumano", eq: "mancuerna", move: "rdl", cue: "Bisagra de cadera, espalda recta, foco isquios." },
+      { id: "l7", name: "Puente de glúteo con banda", eq: "banda", move: "gluteBridge", cue: "Pausa 1–2 seg arriba." },
+      { id: "l8", name: "Step-up", eq: "mancuerna", move: "stepUp", cue: "Alterna la pierna líder." },
+      { id: "l9", name: "Abducción lateral (monster walk)", eq: "banda", move: "lateralWalk", cue: "Rodillas semi-flexionadas, banda en tobillos." },
+      { id: "l10", name: "Talones a una pierna", eq: "mancuerna", move: "calfRaise", cue: "Más exigente que el bilateral." },
+    ],
+  },
+  {
+    id: "sabado", label: "Sábado", type: "Yoga", theme: "yoga",
+    exercises: [{ id: "y1", name: "Flujo de movilidad 20–30 min", eq: "", move: "yoga", cue: "Cadera, columna torácica y hombros." }],
+  },
+  {
+    id: "domingo", label: "Domingo", type: "Descanso", theme: "rest",
+    exercises: [{ id: "r1", name: "Caminata 30 min + descanso", eq: "", move: "rest", cue: "Día suave, prioriza recuperación." }],
+  },
+];
+
+const STORAGE_KEY = "verano-tracker-progress";
+
+/* ------------------------------- App Component ------------------------------- */
+
+export default function App() {
+  const [cycle, setCycle] = useState(1);
+  const [week, setWeek] = useState(1);
+  const [selectedDay, setSelectedDay] = useState("lunes");
+  const [progress, setProgress] = useState({});
+  const [loaded, setLoaded] = useState(false);
+  const [justStamped, setJustStamped] = useState(null);
+  const [openEx, setOpenEx] = useState(null);
+
+  useEffect(() => {
+    try {
+      const savedData = localStorage.getItem(STORAGE_KEY);
+      if (savedData) {
+        setProgress(JSON.parse(savedData));
+      }
+    } catch (e) {
+      console.error("No se pudo cargar el progreso", e);
+    } finally {
+      setLoaded(true);
+    }
+  }, []);
+
+  const persist = useCallback((next) => {
+    setProgress(next);
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    } catch (e) {
+      console.error("No se pudo guardar el progreso", e);
+    }
+  }, []);
+
+  const slotKey = `${cycle}-${week}-${selectedDay}`;
+  const slot = progress[slotKey] || { done: [], weights: {} };
+
+  const toggleDone = (exId) => {
+    const done = slot.done.includes(exId)
+      ? slot.done.filter((d) => d !== exId)
+      : [...slot.done, exId];
+    if (!slot.done.includes(exId)) {
+      setJustStamped(exId);
+      setTimeout(() => setJustStamped(null), 500);
+    }
+    persist({ ...progress, [slotKey]: { ...slot, done } });
+  };
+
+  const setWeight = (exId, value) => {
+    persist({
+      ...progress,
+      [slotKey]: { ...slot, weights: { ...slot.weights, [exId]: value } },
+    });
+  };
+
+  const day = DAYS.find((d) => d.id === selectedDay);
+  const theme = DAY_THEME[day.theme];
+  const phase = PHASES[week];
+  const Icon = theme.icon;
+
+  const weekDoneCount = DAYS.reduce((acc, d) => {
+    const k = `${cycle}-${week}-${d.id}`;
+    const s = progress[k];
+    const total = d.exercises.length;
+    const done = s?.done?.length || 0;
+    return acc + (done >= total ? 1 : 0);
+  }, 0);
+
+  return (
+    <div className="tracker-root">
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Quicksand:wght@500;600;700&display=swap');
+
+        .tracker-root {
+          min-height: 100vh;
+          background-color: #EFF6F5;
+          background-image: radial-gradient(circle, #d6e6e4 1px, transparent 1px);
+          background-size: 18px 18px;
+          font-family: 'Quicksand', sans-serif;
+          color: #3a3a3a;
+          padding: 20px 14px 60px;
+        }
+        .hand { font-family: 'Caveat', cursive; }
+        .washi { position: relative; }
+        .washi::before {
+          content: '';
+          position: absolute;
+          top: -10px; left: 50%;
+          transform: translateX(-50%) rotate(-3deg);
+          width: 70px; height: 18px;
+          background: repeating-linear-gradient(45deg, #ffd9d0, #ffd9d0 6px, #ffc7ba 6px, #ffc7ba 12px);
+          opacity: 0.85;
+          border-radius: 2px;
+        }
+        .stamp-pop { animation: stampPop 0.45s ease-out; }
+        @keyframes stampPop {
+          0% { transform: scale(2) rotate(-15deg); opacity: 0; }
+          60% { transform: scale(0.9) rotate(8deg); opacity: 1; }
+          100% { transform: scale(1) rotate(-6deg); opacity: 1; }
+        }
+        .day-card { transition: transform 0.15s ease; }
+        .day-card:hover { transform: translateY(-2px) rotate(-0.5deg); }
+        .modal-pop { animation: modalPop 0.25s ease-out; }
+        @keyframes modalPop {
+          0% { transform: scale(0.9) rotate(-2deg); opacity: 0; }
+          100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+        .row-tap { cursor: pointer; }
+        input[type="number"] { font-family: 'Quicksand', sans-serif; }
+      `}</style>
+
+      <div className="max-w-xl mx-auto">
+        <div className="flex items-center gap-2 mb-1">
+          <Sparkle className="w-6 h-6" style={{ color: "#FFB627" }} />
+          <h1 className="hand text-4xl">Mi cuaderno de verano</h1>
+        </div>
+        <p className="text-sm text-gray-500 mb-5 ml-1">
+          Mancuernas ajustables + bandas · toca un ejercicio para ver cómo se hace
+        </p>
+
+        <div className="flex flex-wrap gap-3 mb-5">
+          <div className="bg-white rounded-2xl px-3 py-2 shadow-sm flex items-center gap-2">
+            <span className="text-xs text-gray-400 hand text-lg">ciclo</span>
+            {[1, 2, 3].map((c) => (
+              <button key={c} onClick={() => setCycle(c)}
+                className="w-7 h-7 rounded-full text-sm font-semibold transition"
+                style={{ background: cycle === c ? "#FF6B5B" : "#f3f3f3", color: cycle === c ? "white" : "#888" }}>
+                {c}
+              </button>
+            ))}
+          </div>
+          <div className="bg-white rounded-2xl px-3 py-2 shadow-sm flex items-center gap-2">
+            <span className="text-xs text-gray-400 hand text-lg">semana</span>
+            {[1, 2, 3, 4].map((w) => (
+              <button key={w} onClick={() => setWeek(w)}
+                className="w-7 h-7 rounded-full text-sm font-semibold transition"
+                style={{ background: week === w ? PHASES[w].color : "#f3f3f3", color: week === w ? "white" : "#888" }}>
+                {w}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="rounded-2xl px-4 py-3 mb-5 flex items-center justify-between"
+          style={{ background: phase.color + "22", border: `2px dashed ${phase.color}` }}>
+          <div>
+            <p className="hand text-2xl" style={{ color: phase.color }}>Semana {week} · {phase.name}</p>
+            <p className="text-xs text-gray-500">{phase.sets} series × {phase.reps} reps · RPE {phase.rpe}</p>
+          </div>
+          <p className="text-xs text-gray-400">{weekDoneCount}/7 días completos</p>
+        </div>
+
+        <div className="flex gap-2 overflow-x-auto pb-2 mb-5 -mx-1 px-1">
+          {DAYS.map((d) => {
+            const t = DAY_THEME[d.theme];
+            const DIcon = t.icon;
+            const active = d.id === selectedDay;
+            const k = `${cycle}-${week}-${d.id}`;
+            const s = progress[k];
+            const complete = (s?.done?.length || 0) >= d.exercises.length;
+            return (
+              <button key={d.id} onClick={() => setSelectedDay(d.id)}
+                className="flex-shrink-0 rounded-2xl px-3 py-2 flex flex-col items-center gap-1 transition"
+                style={{
+                  background: active ? t.color : t.bg, minWidth: 64,
+                  transform: active ? "scale(1.06) rotate(-1deg)" : "none",
+                  boxShadow: active ? "0 4px 10px rgba(0,0,0,0.12)" : "none",
+                }}>
+                <DIcon className="w-7 h-7" style={{ color: active ? "white" : t.color }} />
+                <span className="text-[11px] font-semibold" style={{ color: active ? "white" : "#666" }}>
+                  {d.label.slice(0, 3)}
+                </span>
+                {complete && <span style={{ color: active ? "white" : t.color, fontSize: 10 }}>✓</span>}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="washi day-card rounded-3xl p-5 mb-6" style={{ background: theme.bg, border: `2px solid ${theme.color}33` }}>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="rounded-2xl p-2" style={{ background: "white" }}>
+              <Icon className="w-9 h-9" style={{ color: theme.color }} />
+            </div>
+            <div>
+              <p className="hand text-3xl" style={{ color: theme.color }}>{day.label}</p>
+              <p className="text-xs text-gray-500">{day.type}</p>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-3">
+            {day.exercises.map((ex) => {
+              const done = slot.done.includes(ex.id);
+              return (
+                <div key={ex.id}
+                  className="bg-white rounded-2xl p-3 flex items-center justify-between gap-3 relative overflow-hidden"
+                  style={{ opacity: done ? 0.75 : 1 }}>
+                  <div className="flex items-center gap-2 min-w-0 row-tap" onClick={() => setOpenEx(ex)}>
+                    <div className="w-9 h-9 rounded-xl flex-shrink-0 flex items-center justify-center" style={{ background: theme.color + "1a" }}>
+                      <Diagram move={ex.move} color={theme.color} />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold truncate">{ex.name}</p>
+                      {ex.eq && (
+                        <p className="text-[11px] text-gray-400 flex items-center gap-1">
+                          {phase.sets}×{phase.reps} · {ex.eq}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    {ex.eq === "mancuerna" && (
+                      <input type="number" placeholder="kg" value={slot.weights[ex.id] ?? ""}
+                        onChange={(e) => setWeight(ex.id, e.target.value)}
+                        className="w-14 text-center text-sm rounded-lg border border-gray-200 py-1" />
+                    )}
+                    <button onClick={() => toggleDone(ex.id)}
+                      className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
+                      style={{ background: done ? theme.color : "#f0f0f0" }}>
+                      <Stamp className={`w-5 h-5 ${justStamped === ex.id ? "stamp-pop" : ""}`}
+                        style={{ color: done ? "white" : "#bbb" }} />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {!loaded && <p className="text-center text-xs text-gray-400">Cargando tu cuaderno…</p>}
+        <p className="text-center text-xs text-gray-400 hand text-base">
+          tu progreso se guarda solo, página tras página ✿
+        </p>
+      </div>
+
+      {openEx && (
+        <div className="fixed inset-0 flex items-center justify-center p-5 z-50"
+          style={{ background: "rgba(58,58,58,0.45)" }}
+          onClick={() => setOpenEx(null)}>
+          <div className="modal-pop bg-white rounded-3xl p-5 max-w-sm w-full"
+            onClick={(e) => e.stopPropagation()}
+            style={{ border: `3px solid ${theme.color}` }}>
+            <div className="rounded-2xl mb-3 p-4 flex items-center justify-center" style={{ background: theme.bg, height: 180 }}>
+              <div className="w-36 h-36">
+                <Diagram move={openEx.move} color={theme.color} />
+              </div>
+            </div>
+            <p className="hand text-3xl mb-1" style={{ color: theme.color }}>{openEx.name}</p>
+            {openEx.eq && (
+              <p className="text-xs text-gray-400 mb-2">
+                {phase.sets} series × {phase.reps} reps · {openEx.eq}
+              </p>
+            )}
+            <p className="text-sm text-gray-600 mb-4">{openEx.cue}</p>
+            <button onClick={() => setOpenEx(null)}
+              className="w-full rounded-2xl py-2 text-sm font-semibold text-white"
+              style={{ background: theme.color }}>
+              Cerrar
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
