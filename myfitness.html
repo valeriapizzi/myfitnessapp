@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>My Mobile Workout App</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://jsdelivr.net"></script>
+    <!-- React and Babel CDNs -->
+    <script src="https://unpkg.com" crossorigin></script>
+    <script src="https://unpkg.com" crossorigin></script>
+    <script src="https://unpkg.com"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-900">
+
+    <div id="root"></div>
+
+    <script type="text/babel">
+        // Extracted Hooks from React object
+        const { useState, useEffect, useCallback } = React;
+
+        /* ----------------------------- Doodle icons ----------------------------- */
+        const Dumbbell = ({ className = "" }) => (
+          <svg viewBox="0 0 64 64" className={className} fill="none">
+            <rect x="6" y="24" width="10" height="16" rx="3" stroke="currentColor" strokeWidth="3" />
+            <rect x="48" y="24" width="10" height="16" rx="3" stroke="currentColor" strokeWidth="3" />
+            <path d="M16 31 H48" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+            <path d="M22 22 V42 M42 22 V42" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+          </svg>
+        );
+
+        const Band = ({ className = "" }) => (
+          <svg viewBox="0 0 64 64" className={className} fill="none">
+            <path
+              d="M14 12c-10 8-10 32 0 40 6 5 14 5 18-2 3-6-1-12-7-12s-9 6-6 11c4 7 12 7 18 2 10-8 10-32 0-40"
+              stroke="currentColor"
+              strokeWidth="3.5"
+              strokeLinecap="round"
+              fill="none"
+            />
+          </svg>
+        );
+
+        const Yoga = ({ className = "" }) => (
+          <svg viewBox="0 0 64 64" className={className} fill="none">
+            <circle cx="32" cy="12" r="5" stroke="currentColor" strokeWidth="3" />
+            <path
+              d="M32 17 V34 M32 34 C20 38 14 48 12 54 M32 34 C44 38 50 48 52 54 M22 26 C26 30 38 30 42 26"
+              stroke="currentColor"
+              strokeWidth="3"
+              strokeLinecap="round"
+              fill="none"
+            />
+          </svg>
+        );
+
+        const Walk = ({ className = "" }) => (
+          <svg viewBox="0 0 64 64" className={className} fill="none">
+            <path
+              d="M18 50c2-3 1-7-2-9s-3-7 1-9 8 1 8 6c0 3-2 4-2 7 0 4 4 5 6 2"
+              stroke="currentColor"
+              strokeWidth="3"
+              strokeLinecap="round"
+              fill="none"
+            />
+            <path
+              d="M38 30c2-3 1-7-2-9s-3-7 1-9 8 1 8 6c0 3-2 4-2 7 0 4 4 5 6 2"
+              stroke="currentColor"
+              strokeWidth="3"
+              strokeLinecap="round"
+              fill="none"
+            />
+          </svg>
+        );
+
+        const Sun = ({ className = "" }) => (
+          <svg viewBox="0 0 64 64" className={className} fill="none">
+            <circle cx="32" cy="32" r="10" stroke="currentColor" strokeWidth="3" />
+            {[0, 45, 90, 135, 180, 225, 270, 315].map((deg) => (
+              <line
+                key={deg}
+                x1={32 + 16 * Math.cos((deg * Math.PI) / 180)}
+                y1={32 + 16 * Math.sin((deg * Math.PI) / 180)}
+                x2={32 + 22 * Math.cos((deg * Math.PI) / 180)}
+                y2={32 + 22 * Math.sin((deg * Math.PI) / 180)}
+                stroke="currentColor"
+                strokeWidth="3"
+                strokeLinecap="round"
+              />
+            ))}
+          </svg>
+        );
+
+        const Stamp = ({ className = "" }) => (
+          <svg viewBox="0 0 64 64" className={className} fill="none">
+            <path
+              d="M14 34 L26 46 L50 18"
+              stroke="currentColor"
+              strokeWidth="6"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              fill="none"
+            />
+          </svg>
+        );
+
+        const Sparkle = ({ className = "" }) => (
+          <svg viewBox="0 0 64 64" className={className} fill="currentColor">
+            <path d="M32 8 L37 27 L56 32 L37 37 L32 56 L27 37 L8 32 L27 27 Z" />
+          </svg>
+        );
+
+        /* ------------------------- Exercise pictograms ------------------------- */
+        const fig = { stroke: "#3a3a3a" };
+
+        function Head({ cx, cy }) {
+          return <circle cx={cx} cy={cy} r="6" stroke={fig.stroke} strokeWidth="3" fill="white" />;
+        }
+        function Limb({ d }) {
+          return <path d={d} stroke={fig.stroke} strokeWidth="3" strokeLinecap="round" fill="none" />;
+        }
+        function Arrow({ d, color }) {
+          return <path d={d} stroke={color} strokeWidth="3" strokeLinecap="round" strokeDasharray="2 4" fill="none" markerEnd="url(#arrowhead)" />;
+        }
+        function Weight({ x, y, color }) {
+          return <rect x={x - 5} y={y - 4} width="10" height="8" rx="2" fill={color} />;
+        }
+        function BandMark({ x1, y1, x2, y2, color }) {
+          return <path d={`M${x1} ${y1} Q${(x1+x2)/2} ${(y1+y2)/2 - 8} ${x2} ${y2}`} stroke={color} strokeWidth="2.5" fill="none" />;
+        }
+
+        const Diagram = ({ move, color }) => {
+          const arrowDefs = (
+            <defs>
+              <marker id="arrowhead" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+                <path d="M0,0 L6,3 L0,6 Z" fill={color} />
+              </marker>
+            </defs>
+          );
+
+          const wrap = (children) => (
+            <svg viewBox="0 0 100 100" className="w-full h-full">
+              {arrowDefs}
+              {children}
+            </svg>
+          );
+
+          switch (move) {
+            case "overheadPress":
+              return wrap(<>
+                <Head cx={50} cy={28} />
+                <Limb d="M50 34 V62" />
+                <Limb d="M50 38 L36 18 M50 38 L64 18" />
+                <Limb d="M50 62 L40 88 M50 62 L60 88" />
+                <Weight x={36} y={18} color={color} /><Weight x={64} y={18} color={color} />
+                <Arrow d="M50 18 V6" color={color} />
+              </>);
+            case "floorPress":
+              return wrap(<>
+                <Head cx={20} cy={55} />
+                <Limb d="M26 55 H78" />
+                <Limb d="M40 55 L40 35" />
+                <Limb d="M55 55 L55 35" />
+                <Weight x={40} y={32} color={color} /><Weight x={55} y={32} color={color} />
+                <Limb d="M78 55 L88 60 M78 55 L88 50" />
+                <Arrow d="M47 30 V18" color={color} />
+              </>);
+            case "bandRow":
+              return wrap(<>
+                <Head cx={70} cy={26} />
+                <Limb d="M70 32 V60 M70 60 L60 90 M70 60 L80 90" />
+                <Limb d="M70 38 L50 30" />
+                <Weight x={48} y={30} color={color} />
+                <BandMark x1={18} y1={30} x2={48} y2={30} color={color} />
+                <Limb d="M14 14 V46" />
+                <Arrow d="M40 30 L25 30" color={color} />
+              </>);
+            case "lateralRaise":
+              return wrap(<>
+                <Head cx={50} cy={26} />
+                <Limb d="M50 32 V60 M50 60 L40 88 M50 60 L60 88" />
+                <Limb d="M50 36 L24 30 M50 36 L76 30" />
+                <Weight x={22} y={30} color={color} /><Weight x={78} y={30} color={color} />
+                <Arrow d="M22 30 L22 18" color={color} />
+                <Arrow d="M78 30 L78 18" color={color} />
+              </>);
+            case "tricepExt":
+              return wrap(<>
+                <Head cx={50} cy={26} />
+                <Limb d="M50 32 V60 M50 60 L40 88 M50 60 L60 88" />
+                <Limb d="M50 36 L50 14 M50 14 L62 28" />
+                <Weight x={62} y={28} color={color} />
+                <Arrow d="M62 28 L62 44" color={color} />
+              </>);
+            case "bicepCurl":
+              return wrap(<>
+                <Head cx={50} cy={26} />
+                <Limb d="M50 32 V60 M50 60 L40 88 M50 60 L60 88" />
+                <Limb d="M52 38 L62 56 M62 56 L52 36" />
+                <Weight x={52} y={36} color={color} />
+                <Arrow d="M62 56 L62 40" color={color} />
+              </>);
+            case "gobletSquat":
+              return wrap(<>
+                <Head cx={50} cy={32} />
+                <Limb d="M50 38 V58" />
+                <Limb d="M50 42 L40 50 M50 42 L60 50" />
+                <Weight x={50} y={52} color={color} />
+                <Limb d="M50 58 L34 70 L34 90" />
+                <Limb d="M50 58 L66 70 L66 90" />
+                <Arrow d="M16 58 V40" color={color} />
+              </>);
+            case "lunge":
+              return wrap(<>
+                <Head cx={42} cy={26} />
+                <Limb d="M42 32 V52" />
+                <Limb d="M42 52 L26 64 L26 90" />
+                <Limb d="M42 52 L62 60 L74 90" />
+                <Limb d="M42 36 L32 46 M42 36 L52 46" />
+                <Weight x={30} y={46} color={color} /><Weight x={54} y={46} color={color} />
+                <Arrow d="M44 70 V84" color={color} />
+              </>);
+            case "hipThrust":
+              return wrap(<>
+                <Head cx={18} cy={70} />
+                <Limb d="M22 70 H56" />
+                <Limb d="M56 70 L70 50 L70 30" />
+                <Limb d="M56 70 L74 76 L86 76" />
+                <BandMark x1={62} y1={58} x2={78} y2={58} color={color} />
+                <Arrow d="M56 70 L56 56" color={color} />
+              </>);
+            case "calfRaise":
